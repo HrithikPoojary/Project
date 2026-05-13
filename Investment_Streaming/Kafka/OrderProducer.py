@@ -4,6 +4,7 @@ from datetime import datetime
 import json
 import time 
 import logging
+import uuid
 
 class OrderProducer:
     def __init__(self):
@@ -15,11 +16,11 @@ class OrderProducer:
             )
             
         self.cong = {
-                "bootstrap.servers" : "***",
+                "bootstrap.servers" : "**",
                 "security.protocol" : "SASL_SSL",
                 "sasl.mechanism" : "PLAIN",
-                "sasl.username" : "***",
-                "sasl.password" : "***",
+                "sasl.username" : "**",
+                "sasl.password" : "**",
                 "client.id" : "132"
         }
         
@@ -77,6 +78,7 @@ class OrderProducer:
             currency  = "USD"
             
         input = {
+            "unique_no" : str(uuid.uuid4()),
             "account_number" : self.account(),
             "asset_external_id" : asset,
             "order_type": self.order_type(),
@@ -94,8 +96,8 @@ class OrderProducer:
         if err is not None:
             logging.error(f"Error occured {err}")
         else:
-            account_number = msg.key().encoded('utf-8')
-            asset_number = json.loads(msg).encoded('utf-8')['asset_external_id']
+            account_number = msg.key().decode('utf-8')
+            asset_number = json.loads(msg.value())['asset_external_id']
             logging.info(f"Account {account_number} Asset {asset_number} is pushed successfully")
 
     def order_producer(self):
