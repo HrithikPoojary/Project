@@ -1,6 +1,6 @@
 from confluent_kafka import Producer
 import random
-from datetime import date 
+from datetime import datetime 
 import json
 import time 
 import logging
@@ -9,21 +9,21 @@ class OrderProducer:
     def __init__(self):
         
         logging.basicConfig(
-            filename = 'OrderProducer.log',
-            levelname = logging.INFO,
+            filename = '/Workspace/Users/hrithikpoojary29@gmail.com/Investment_Banking/Logs/OrderProducer.log',
+            level = logging.INFO,
             format = "OrderProducer - | %(asctime)s | %(levelname)s %(message)s"
             )
             
         self.cong = {
-                "bootstrap.servers" : "",
+                "bootstrap.servers" : "***",
                 "security.protocol" : "SASL_SSL",
                 "sasl.mechanism" : "PLAIN",
-                "sasl.username" : "",
-                "sasl.password" : "",
-                "client.id" : 
+                "sasl.username" : "***",
+                "sasl.password" : "***",
+                "client.id" : "132"
         }
         
-        self.topic = ""
+        self.topic = "DEV_ORDERS"
         
     def account(self):
         account_list = (
@@ -37,8 +37,7 @@ class OrderProducer:
         return account_number
         
     def asset(self):
-        asset_list = 
-                (
+        asset_list = (
                     "RELIANCE", 
                     "TCS", 
                     "HDFCBANK", 
@@ -75,7 +74,7 @@ class OrderProducer:
         if asset in ("ICICIBANK" , "NVDA", "GOOGL",  "AAPL", "MSFT", "AMZN"):
             currency = "INR"
         else :
-            currently  = "USD"
+            currency  = "USD"
             
         input = {
             "account_number" : self.account(),
@@ -91,26 +90,38 @@ class OrderProducer:
         data  = json.dumps(input)
         return data 
         
-    def delivery_msg(err , msg):
+    def delivery_msg(self,err , msg):
         if err is not None:
             logging.error(f"Error occured {err}")
         else:
-            logging.info(f"Successfull")
-            
+            account_number = msg.key().encoded('utf-8')
+            asset_number = json.loads(msg).encoded('utf-8')['asset_external_id']
+            logging.info(f"Account {account_number} Asset {asset_number} is pushed successfully")
+
+    def order_producer(self):
+
+        try:
+            producer_data =self.order_data()
+            key = json.loads(producer_data)['account_number']
+            value = producer_data
+
+            producer = Producer(self.cong)
+
+            producer.produce(
+                            self.topic,
+                            key = key,
+                            value = value,
+                            callback = self.delivery_msg
+                                )
+            producer.poll(0)
+            time.sleep(0.5)
+        except Exception as e :
+            logging.info(f"Failed due to {e}")
+
+        finally:
+            producer.flush(1)
+
+if __name__ == '__main__':
+    op = OrderProducer()
+    op.order_producer()
     
-    
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-       
- 
